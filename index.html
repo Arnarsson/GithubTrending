@@ -253,93 +253,8 @@
   </template>
 
   <script>
-    const repoData = [
-      {
-        id: 'cursor-ai/cursor',
-        title: 'cursor-ai/cursor',
-        description: 'The AI-first code editor. Build software faster with a high-signal workflow.',
-        language: 'TypeScript',
-        languageColor: 'yellow',
-        ecosystem: 'AI/ML',
-        ageDays: 3,
-        lastCommitDays: 2,
-        stars24: 124,
-        trend: 98,
-        starredDaysAgo: 0,
-        curators: ['bentossell', 'steipete', 'swyx', 'theo', 'bruce', 't3dotgg'],
-        primaryCurator: 'bentossell',
-        spark: [2, 4, 3, 8, 12, 15, 20],
-        authority: 96
-      },
-      {
-        id: 'oxc-project/oxc',
-        title: 'oxc-project/oxc',
-        description: 'The Oxidized JavaScript Compiler suite with best-in-class performance.',
-        language: 'Rust',
-        languageColor: 'orange',
-        ecosystem: 'Rust',
-        ageDays: 120,
-        lastCommitDays: 3,
-        stars24: 45,
-        trend: 84,
-        starredDaysAgo: 1,
-        curators: ['torvalds', 'matklad', 'dtolnay'],
-        primaryCurator: 'torvalds',
-        spark: [4, 6, 7, 9, 10, 12, 14],
-        authority: 90
-      },
-      {
-        id: 'openpipe/ai-router',
-        title: 'openpipe/ai-router',
-        description: 'A fast multi-provider routing layer for AI calls with usage analytics.',
-        language: 'Go',
-        languageColor: 'emerald',
-        ecosystem: 'AI/ML',
-        ageDays: 9,
-        lastCommitDays: 1,
-        stars24: 61,
-        trend: 79,
-        starredDaysAgo: 0,
-        curators: ['shadcn', 'danielgross', 'karpathy'],
-        primaryCurator: 'shadcn',
-        spark: [3, 5, 8, 7, 10, 12, 16],
-        authority: 88
-      },
-      {
-        id: 'vercel/turbo',
-        title: 'vercel/turbo',
-        description: 'Incremental builds and task orchestration for monorepos.',
-        language: 'TypeScript',
-        languageColor: 'yellow',
-        ecosystem: 'Frontend',
-        ageDays: 620,
-        lastCommitDays: 5,
-        stars24: 32,
-        trend: 72,
-        starredDaysAgo: 3,
-        curators: ['rauchg', 'shadcn'],
-        primaryCurator: 'rauchg',
-        spark: [2, 4, 3, 5, 4, 6, 7],
-        authority: 86
-      },
-      {
-        id: 'tinygrad/tinygrad',
-        title: 'tinygrad/tinygrad',
-        description: 'A small, fast, and hackable deep learning framework.',
-        language: 'Python',
-        languageColor: 'sky',
-        ecosystem: 'AI/ML',
-        ageDays: 80,
-        lastCommitDays: 4,
-        stars24: 55,
-        trend: 77,
-        starredDaysAgo: 4,
-        curators: ['geohot', 'swyx'],
-        primaryCurator: 'geohot',
-        spark: [5, 6, 8, 7, 9, 12, 11],
-        authority: 85
-      }
-    ];
+    let repoData = [];
+    const fallbackData = [];
 
     const curatorProfiles = {
       bentossell: 'https://github.com/bentossell.png',
@@ -375,6 +290,7 @@
     const curatorFilters = document.getElementById('curator-filters');
     const activeEcosystem = document.getElementById('active-ecosystem');
     const pageTitle = document.getElementById('page-title');
+    const lastUpdated = document.getElementById('last-updated');
 
     function formatRelative(days) {
       if (days === 0) return 'today';
@@ -418,6 +334,11 @@
     }
 
     function render() {
+      if (!repoData.length) {
+        emptyState.classList.remove('hidden');
+        emptyState.textContent = 'No data loaded yet.';
+        return;
+      }
       const filtered = repoData
         .filter(matchesFilters)
         .sort((a, b) => b.trend - a.trend);
@@ -541,6 +462,26 @@
         pageTitle.textContent = 'Saved Repos';
       } else {
         pageTitle.textContent = 'Today’s Top Picks';
+      }
+    }
+
+    async function loadFeed() {
+      try {
+        const response = await fetch('./data-feed.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Failed to load feed');
+        const payload = await response.json();
+        repoData = payload.repos || [];
+        if (payload.updatedAt && lastUpdated) {
+          const updatedDate = new Date(payload.updatedAt);
+          lastUpdated.textContent = `Updated ${updatedDate.toLocaleString()}`;
+        }
+      } catch (error) {
+        repoData = fallbackData;
+        emptyState.classList.remove('hidden');
+        emptyState.textContent = 'Failed to load feed. Check data-feed.json.';
+      } finally {
+        state.isLoading = false;
+        render();
       }
     }
 
@@ -775,12 +716,8 @@
     });
 
     document.body.classList.toggle('density-compact', state.density === 'compact');
-    setTimeout(() => {
-      state.isLoading = false;
-      render();
-    }, 450);
-
     render();
+    loadFeed();
   </script>
 </body>
 </html>
