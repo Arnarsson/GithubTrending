@@ -73,7 +73,7 @@
             </div>
           </div>
 
-          <nav class="flex flex-wrap items-center gap-2">
+          <nav class="hidden sm:flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2">
               <span class="text-xs text-gray-500 font-mono">Timeframe</span>
               <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white chip-active" data-timeframe="week">This Week</button>
@@ -90,7 +90,33 @@
             </div>
             <div class="h-6 w-px bg-border hidden sm:block"></div>
             <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" id="new-only">New Only</button>
+            <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" id="saved-only">Saved</button>
           </nav>
+          <div class="sm:hidden mt-2">
+            <button class="w-full flex items-center justify-between px-4 py-2 rounded-lg border border-border text-sm text-gray-300" id="mobile-filters-toggle">
+              <span class="font-mono text-xs text-gray-500">Filters</span>
+              <span class="text-xs text-gray-400">Tap to expand</span>
+            </button>
+            <div class="mt-3 hidden flex-col gap-3" id="mobile-filters">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-gray-500 font-mono">Timeframe</span>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white chip-active" data-timeframe="week">This Week</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-timeframe="today">Today</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-timeframe="month">This Month</button>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-gray-500 font-mono">Ecosystem</span>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white chip-active" data-ecosystem="All">All</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="Frontend">Frontend</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="AI/ML">AI/ML</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="Rust">Rust</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" id="new-only-mobile">New Only</button>
+                <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" id="saved-only-mobile">Saved</button>
+              </div>
+            </div>
+          </div>
         </header>
 
         <main class="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
@@ -134,6 +160,7 @@
             <span class="px-2 py-0.5 rounded-full text-xs font-medium" data-freshness-pill></span>
           </div>
           <p class="text-sm text-gray-400 line-clamp-2" data-description></p>
+          <div class="text-xs text-gray-400 sm:hidden" data-starred-by-mobile></div>
           <div class="flex items-center gap-2 text-xs text-gray-500 font-mono">
             <span data-ecosystem></span>
             <span>•</span>
@@ -163,7 +190,7 @@
         </div>
         <div class="flex flex-col items-end md:items-end gap-2 md:gap-2">
           <div class="flex items-center gap-1 text-success text-xs font-mono font-medium" data-stars24></div>
-          <svg class="w-24 h-6 text-authority opacity-70" viewBox="0 0 100 20" preserveAspectRatio="none" data-spark></svg>
+          <svg class="hidden sm:block w-24 h-6 text-authority opacity-70" viewBox="0 0 100 20" preserveAspectRatio="none" data-spark></svg>
           <button class="text-xs font-mono text-gray-500 hover:text-white" data-save>Save</button>
         </div>
       </div>
@@ -280,6 +307,7 @@
       timeframe: 'week',
       ecosystem: 'All',
       newOnly: false,
+      savedOnly: false,
       curators: new Set(),
       saved: new Set(JSON.parse(localStorage.getItem('devpulse:saved') || '[]'))
     };
@@ -312,6 +340,7 @@
       if (!withinTimeframe(repo)) return false;
       if (state.ecosystem !== 'All' && repo.ecosystem !== state.ecosystem) return false;
       if (state.newOnly && repo.ageDays > 30) return false;
+      if (state.savedOnly && !state.saved.has(repo.id)) return false;
       if (state.curators.size > 0) {
         const hasCurator = repo.curators.some(curator => state.curators.has(curator));
         if (!hasCurator) return false;
@@ -416,6 +445,7 @@
           render();
         });
 
+        card.querySelector('[data-starred-by-mobile]').textContent = `Starred by @${repo.primaryCurator} ${formatRelative(repo.starredDaysAgo)}`;
         feed.appendChild(card);
       });
 
@@ -504,7 +534,76 @@
     document.getElementById('new-only').addEventListener('click', (event) => {
       state.newOnly = !state.newOnly;
       event.currentTarget.classList.toggle('chip-active', state.newOnly);
+      const mobileToggle = document.getElementById('new-only-mobile');
+      if (mobileToggle) mobileToggle.classList.toggle('chip-active', state.newOnly);
       render();
+    });
+
+    document.getElementById('saved-only').addEventListener('click', (event) => {
+      state.savedOnly = !state.savedOnly;
+      event.currentTarget.classList.toggle('chip-active', state.savedOnly);
+      const mobileToggle = document.getElementById('saved-only-mobile');
+      if (mobileToggle) mobileToggle.classList.toggle('chip-active', state.savedOnly);
+      render();
+    });
+
+    document.getElementById('new-only-mobile').addEventListener('click', (event) => {
+      state.newOnly = !state.newOnly;
+      event.currentTarget.classList.toggle('chip-active', state.newOnly);
+      const desktopToggle = document.getElementById('new-only');
+      if (desktopToggle) desktopToggle.classList.toggle('chip-active', state.newOnly);
+      render();
+    });
+
+    document.getElementById('saved-only-mobile').addEventListener('click', (event) => {
+      state.savedOnly = !state.savedOnly;
+      event.currentTarget.classList.toggle('chip-active', state.savedOnly);
+      const desktopToggle = document.getElementById('saved-only');
+      if (desktopToggle) desktopToggle.classList.toggle('chip-active', state.savedOnly);
+      render();
+    });
+
+
+    document.getElementById('mobile-filters-toggle').addEventListener('click', () => {
+      document.getElementById('mobile-filters').classList.toggle('hidden');
+    });
+
+    const mobileNav = document.createElement('div');
+    mobileNav.className = 'sm:hidden fixed bottom-0 left-0 right-0 bg-card/95 border-t border-border backdrop-blur px-4 py-3 flex items-center justify-between z-50';
+    mobileNav.innerHTML = `
+      <button class="flex flex-col items-center text-xs text-gray-400" id="mobile-feed">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Feed
+      </button>
+      <button class="flex flex-col items-center text-xs text-gray-400" id="mobile-saved">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3-7 3V5z"/></svg>
+        Saved
+      </button>
+      <button class="flex flex-col items-center text-xs text-gray-400" id="mobile-filters-btn">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M6 12h12M10 19h4"/></svg>
+        Filters
+      </button>
+    `;
+    document.body.appendChild(mobileNav);
+
+    document.getElementById('mobile-feed').addEventListener('click', () => {
+      state.savedOnly = false;
+      document.getElementById('saved-only').classList.remove('chip-active');
+      document.getElementById('saved-only-mobile').classList.remove('chip-active');
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('mobile-saved').addEventListener('click', () => {
+      state.savedOnly = !state.savedOnly;
+      document.getElementById('saved-only').classList.toggle('chip-active', state.savedOnly);
+      document.getElementById('saved-only-mobile').classList.toggle('chip-active', state.savedOnly);
+      render();
+    });
+
+    document.getElementById('mobile-filters-btn').addEventListener('click', () => {
+      document.getElementById('mobile-filters').classList.toggle('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     render();
