@@ -50,6 +50,11 @@
     .noise {
       background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.035"/></svg>');
     }
+    .chip-active {
+      background-color: #161616;
+      border-color: #3f3f46;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body class="bg-background text-gray-300 font-sans">
@@ -63,214 +68,446 @@
               <h1 class="text-3xl sm:text-4xl font-semibold text-white tracking-tight">Today’s Top Picks</h1>
             </div>
             <div class="hidden sm:flex items-center gap-2 text-xs text-gray-500 font-mono">
-              <span class="px-2 py-1 rounded-full border border-border">Updated 5m ago</span>
-              <span class="px-2 py-1 rounded-full border border-border">AI/ML</span>
+              <span class="px-2 py-1 rounded-full border border-border" id="last-updated">Updated just now</span>
+              <span class="px-2 py-1 rounded-full border border-border" id="active-ecosystem">All</span>
             </div>
           </div>
 
           <nav class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2">
               <span class="text-xs text-gray-500 font-mono">Timeframe</span>
-              <button class="px-3 py-1.5 rounded-full bg-card border border-border text-sm text-white">This Week</button>
-              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">Today</button>
-              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">This Month</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white chip-active" data-timeframe="week">This Week</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-timeframe="today">Today</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-timeframe="month">This Month</button>
             </div>
             <div class="h-6 w-px bg-border hidden sm:block"></div>
             <div class="flex items-center gap-2">
               <span class="text-xs text-gray-500 font-mono">Ecosystem</span>
-              <button class="px-3 py-1.5 rounded-full bg-card border border-border text-sm text-white">All</button>
-              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">Frontend</button>
-              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">AI/ML</button>
-              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">Rust</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white chip-active" data-ecosystem="All">All</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="Frontend">Frontend</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="AI/ML">AI/ML</button>
+              <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" data-ecosystem="Rust">Rust</button>
             </div>
             <div class="h-6 w-px bg-border hidden sm:block"></div>
-            <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white">New Only</button>
+            <button class="px-3 py-1.5 rounded-full border border-border text-sm text-gray-400 hover:text-white" id="new-only">New Only</button>
           </nav>
         </header>
 
         <main class="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-          <section class="flex flex-col gap-4">
-            <!-- Card 1 -->
-            <article class="w-full bg-card border border-border rounded-xl p-5 flex items-center gap-6 shadow-soft hover:shadow-glow hover:border-gray-600 transition-all cursor-pointer group animate-fadeUp" style="animation-delay: 0.05s; opacity: 0;">
-              <div class="flex items-center gap-5 flex-1 min-w-0">
-                <div class="font-mono text-2xl font-bold text-gray-500 w-8 text-center">#1</div>
+          <section class="flex flex-col gap-4" id="feed"></section>
 
-                <div class="flex flex-col gap-1 min-w-0">
-                  <div class="flex items-center gap-3 flex-wrap">
-                    <h3 class="text-xl font-semibold text-white truncate hover:text-accent transition-colors">cursor-ai/cursor</h3>
-                    <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-500 font-mono">
-                      <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-                      TypeScript
-                    </span>
-                    <span class="px-2 py-0.5 rounded-full bg-freshness/10 border border-freshness/20 text-xs text-freshness font-medium">New (3d)</span>
-                  </div>
-                  <p class="text-sm text-gray-400 line-clamp-2">The AI-first code editor. Build software faster with a high-signal workflow.</p>
-                </div>
-              </div>
+          <div id="empty-state" class="hidden bg-card border border-border rounded-xl p-6 text-sm text-gray-400">
+            No repos match your filters. Try widening the timeframe or clearing curator filters.
+          </div>
 
-              <div class="hidden md:flex flex-col items-end gap-1.5 border-r border-border pr-6 mr-2">
-                <div class="flex items-center -space-x-2">
-                  <img class="w-8 h-8 rounded-full border-2 border-card" src="https://github.com/bentossell.png" alt="Ben" />
-                  <img class="w-8 h-8 rounded-full border-2 border-card" src="https://github.com/steipete.png" alt="Peter" />
-                  <div class="w-8 h-8 rounded-full border-2 border-card bg-gray-800 flex items-center justify-center text-xs font-medium text-gray-400">+5</div>
-                </div>
-                <div class="text-xs text-gray-500 text-right">
-                  Starred by <span class="text-accent font-medium">@bentossell</span> today
-                </div>
-                <div class="text-[11px] text-success font-mono">+124 stars / 24h</div>
-              </div>
-
-              <div class="flex flex-col items-end gap-1 min-w-[110px] relative">
-                <div class="text-3xl font-mono font-bold text-white tracking-tighter">98</div>
-                <div class="flex items-center gap-1 text-success text-xs font-mono font-medium">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                  124 / 24h
-                </div>
-
-                <div class="relative group/why">
-                  <button class="text-[11px] text-gray-500 hover:text-gray-200 font-mono">Why this?</button>
-                  <div class="absolute right-0 mt-2 w-56 rounded-lg border border-border bg-card text-xs text-gray-300 p-3 shadow-soft opacity-0 translate-y-1 pointer-events-none group-hover/why:opacity-100 group-hover/why:translate-y-0 transition-all">
-                    <div class="font-mono text-gray-400 mb-1">Trend Score: 98</div>
-                    <div>Authority: High (@bentossell)</div>
-                    <div>Velocity: 124 stars / 24h</div>
-                    <div>Freshness: Repo &lt; 30 days</div>
-                  </div>
-                </div>
-
-                <svg class="w-24 h-6 text-authority opacity-60 mt-1" viewBox="0 0 100 20" preserveAspectRatio="none">
-                  <path d="M0 20 L20 15 L40 18 L60 5 L80 10 L100 0" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
-                </svg>
-              </div>
-            </article>
-
-            <!-- Card 2 -->
-            <article class="w-full bg-card border border-border rounded-xl p-5 flex items-center gap-6 shadow-soft hover:shadow-glow hover:border-gray-600 transition-all cursor-pointer group animate-fadeUp" style="animation-delay: 0.12s; opacity: 0;">
-              <div class="flex items-center gap-5 flex-1 min-w-0">
-                <div class="font-mono text-2xl font-bold text-gray-600 w-8 text-center">#2</div>
-                <div class="flex flex-col gap-1 min-w-0">
-                  <div class="flex items-center gap-3 flex-wrap">
-                    <h3 class="text-xl font-semibold text-gray-200 truncate">oxc-project/oxc</h3>
-                    <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs text-orange-500 font-mono">
-                      <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                      Rust
-                    </span>
-                  </div>
-                  <p class="text-sm text-gray-500 line-clamp-2">The Oxidized JavaScript Compiler suite with best-in-class performance.</p>
-                </div>
-              </div>
-              <div class="hidden md:flex flex-col items-end gap-1.5 border-r border-border pr-6 mr-2">
-                <div class="flex items-center -space-x-2">
-                  <img class="w-8 h-8 rounded-full border-2 border-card grayscale opacity-70" src="https://github.com/torvalds.png" alt="Linus" />
-                  <div class="w-8 h-8 rounded-full border-2 border-card bg-gray-800 flex items-center justify-center text-xs font-medium text-gray-400">+2</div>
-                </div>
-                <div class="text-xs text-gray-500 text-right">
-                  Starred by <span class="text-gray-300">@torvalds</span> yesterday
-                </div>
-                <div class="text-[11px] text-success font-mono">+45 stars / 24h</div>
-              </div>
-              <div class="flex flex-col items-end gap-1 min-w-[110px]">
-                <div class="text-3xl font-mono font-bold text-gray-300 tracking-tighter">84</div>
-                <div class="flex items-center gap-1 text-success text-xs font-mono font-medium opacity-80">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                  45 / 24h
-                </div>
-                <svg class="w-24 h-6 text-authority opacity-40 mt-1" viewBox="0 0 100 20" preserveAspectRatio="none">
-                  <path d="M0 18 L20 17 L40 15 L60 12 L80 8 L100 6" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
-                </svg>
-              </div>
-            </article>
-
-            <!-- Card 3 -->
-            <article class="w-full bg-card border border-border rounded-xl p-5 flex items-center gap-6 shadow-soft hover:shadow-glow hover:border-gray-600 transition-all cursor-pointer group animate-fadeUp" style="animation-delay: 0.18s; opacity: 0;">
-              <div class="flex items-center gap-5 flex-1 min-w-0">
-                <div class="font-mono text-2xl font-bold text-gray-600 w-8 text-center">#3</div>
-                <div class="flex flex-col gap-1 min-w-0">
-                  <div class="flex items-center gap-3 flex-wrap">
-                    <h3 class="text-xl font-semibold text-gray-200 truncate">openpipe/ai-router</h3>
-                    <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-mono">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Go
-                    </span>
-                    <span class="px-2 py-0.5 rounded-full bg-freshness/10 border border-freshness/20 text-xs text-freshness font-medium">New (9d)</span>
-                  </div>
-                  <p class="text-sm text-gray-500 line-clamp-2">A fast multi-provider routing layer for AI calls with usage analytics.</p>
-                </div>
-              </div>
-              <div class="hidden md:flex flex-col items-end gap-1.5 border-r border-border pr-6 mr-2">
-                <div class="flex items-center -space-x-2">
-                  <img class="w-8 h-8 rounded-full border-2 border-card" src="https://github.com/shadcn.png" alt="shadcn" />
-                  <img class="w-8 h-8 rounded-full border-2 border-card" src="https://github.com/danielgross.png" alt="Daniel" />
-                  <div class="w-8 h-8 rounded-full border-2 border-card bg-gray-800 flex items-center justify-center text-xs font-medium text-gray-400">+1</div>
-                </div>
-                <div class="text-xs text-gray-500 text-right">
-                  Starred by <span class="text-accent font-medium">@shadcn</span> today
-                </div>
-                <div class="text-[11px] text-success font-mono">+61 stars / 24h</div>
-              </div>
-              <div class="flex flex-col items-end gap-1 min-w-[110px]">
-                <div class="text-3xl font-mono font-bold text-gray-300 tracking-tighter">79</div>
-                <div class="flex items-center gap-1 text-success text-xs font-mono font-medium opacity-80">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                  61 / 24h
-                </div>
-                <svg class="w-24 h-6 text-authority opacity-40 mt-1" viewBox="0 0 100 20" preserveAspectRatio="none">
-                  <path d="M0 18 L20 16 L40 12 L60 15 L80 7 L100 8" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
-                </svg>
-              </div>
-            </article>
-          </section>
-
-          <aside class="bg-card border border-border rounded-xl p-4 h-fit sticky top-6">
+          <aside class="bg-card border border-border rounded-xl p-4 h-fit lg:sticky lg:top-6">
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-mono text-gray-400">Top Curators This Week</h2>
               <button class="text-xs text-gray-500 hover:text-gray-300">View all</button>
             </div>
-            <div class="mt-4 flex flex-col gap-3">
-              <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-gray-600 transition-colors">
-                <div class="flex items-center gap-3">
-                  <img class="w-8 h-8 rounded-full" src="https://github.com/steipete.png" alt="steipete" />
-                  <div class="text-left">
-                    <div class="text-sm text-white">@steipete</div>
-                    <div class="text-[11px] text-gray-500 font-mono">Found 3 trending</div>
-                  </div>
-                </div>
-                <span class="text-xs text-authority font-mono">96</span>
-              </button>
-              <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-gray-600 transition-colors">
-                <div class="flex items-center gap-3">
-                  <img class="w-8 h-8 rounded-full" src="https://github.com/bentossell.png" alt="bentossell" />
-                  <div class="text-left">
-                    <div class="text-sm text-white">@bentossell</div>
-                    <div class="text-[11px] text-gray-500 font-mono">Found 2 trending</div>
-                  </div>
-                </div>
-                <span class="text-xs text-authority font-mono">92</span>
-              </button>
-              <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-gray-600 transition-colors">
-                <div class="flex items-center gap-3">
-                  <img class="w-8 h-8 rounded-full" src="https://github.com/shadcn.png" alt="shadcn" />
-                  <div class="text-left">
-                    <div class="text-sm text-white">@shadcn</div>
-                    <div class="text-[11px] text-gray-500 font-mono">Found 1 trending</div>
-                  </div>
-                </div>
-                <span class="text-xs text-authority font-mono">90</span>
-              </button>
-            </div>
+            <div class="mt-4 flex flex-col gap-3" id="curator-list"></div>
 
             <div class="mt-6 border-t border-border pt-4">
               <h3 class="text-xs font-mono text-gray-500">Filter by Curator</h3>
-              <div class="mt-2 flex flex-wrap gap-2">
-                <button class="px-2.5 py-1 rounded-full border border-border text-xs text-gray-400 hover:text-white">@steipete</button>
-                <button class="px-2.5 py-1 rounded-full border border-border text-xs text-gray-400 hover:text-white">@bentossell</button>
-                <button class="px-2.5 py-1 rounded-full border border-border text-xs text-gray-400 hover:text-white">@torvalds</button>
-                <button class="px-2.5 py-1 rounded-full border border-border text-xs text-gray-400 hover:text-white">@shadcn</button>
-              </div>
+              <div class="mt-2 flex flex-wrap gap-2" id="curator-filters"></div>
             </div>
           </aside>
         </main>
       </div>
     </div>
   </div>
+
+  <template id="card-template">
+    <article class="relative w-full bg-card border border-border rounded-xl p-5 flex flex-col md:flex-row md:items-center gap-5 md:gap-6 shadow-soft hover:shadow-glow hover:border-gray-600 transition-all cursor-pointer group animate-fadeUp">
+      <div class="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b from-authority via-accent to-success opacity-70"></div>
+
+      <div class="flex items-center gap-4 md:gap-5 flex-1 min-w-0 pl-2 w-full">
+        <div class="font-mono text-2xl md:text-3xl font-bold text-gray-500 w-10 text-center" data-rank></div>
+
+        <div class="flex flex-col gap-1 min-w-0">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h3 class="text-xl font-semibold text-white truncate hover:text-accent transition-colors" data-title></h3>
+            <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-mono" data-language-pill>
+              <span class="w-1.5 h-1.5 rounded-full" data-language-dot></span>
+              <span data-language></span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" data-freshness-pill></span>
+          </div>
+          <p class="text-sm text-gray-400 line-clamp-2" data-description></p>
+          <div class="flex items-center gap-2 text-xs text-gray-500 font-mono">
+            <span data-ecosystem></span>
+            <span>•</span>
+            <span data-last-commit></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex md:flex flex-col gap-2 md:gap-1.5 md:items-end md:border-r md:border-border md:pr-6 md:mr-2 min-w-[170px] w-full md:w-auto">
+        <div class="flex items-center gap-2 rounded-full border border-border px-2 py-1 bg-black/20 w-fit">
+          <div class="flex items-center -space-x-2" data-avatar-stack></div>
+          <span class="text-xs text-gray-400 font-mono" data-curator-count></span>
+        </div>
+        <div class="text-xs text-gray-400 md:text-right" data-starred-by></div>
+        <div class="text-[11px] text-success font-mono" data-velocity></div>
+      </div>
+
+      <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 md:gap-2 min-w-[120px] relative w-full md:w-auto">
+        <div class="flex items-center gap-2">
+          <div class="text-3xl font-mono font-bold text-white tracking-tighter" data-trend></div>
+          <div class="relative group/why">
+            <button class="text-gray-500 hover:text-gray-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 18a6 6 0 100-12 6 6 0 000 12z"/></svg>
+            </button>
+            <div class="absolute right-0 mt-2 w-60 rounded-lg border border-border bg-card text-xs text-gray-300 p-3 shadow-soft opacity-0 translate-y-1 pointer-events-none group-hover/why:opacity-100 group-hover/why:translate-y-0 transition-all" data-tooltip></div>
+          </div>
+        </div>
+        <div class="flex flex-col items-end md:items-end gap-2 md:gap-2">
+          <div class="flex items-center gap-1 text-success text-xs font-mono font-medium" data-stars24></div>
+          <svg class="w-24 h-6 text-authority opacity-70" viewBox="0 0 100 20" preserveAspectRatio="none" data-spark></svg>
+          <button class="text-xs font-mono text-gray-500 hover:text-white" data-save>Save</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const repoData = [
+      {
+        id: 'cursor-ai/cursor',
+        title: 'cursor-ai/cursor',
+        description: 'The AI-first code editor. Build software faster with a high-signal workflow.',
+        language: 'TypeScript',
+        languageColor: 'yellow',
+        ecosystem: 'AI/ML',
+        ageDays: 3,
+        lastCommitDays: 2,
+        stars24: 124,
+        trend: 98,
+        starredDaysAgo: 0,
+        curators: ['bentossell', 'steipete', 'swyx', 'theo', 'bruce', 't3dotgg'],
+        primaryCurator: 'bentossell',
+        spark: [2, 4, 3, 8, 12, 15, 20],
+        authority: 96
+      },
+      {
+        id: 'oxc-project/oxc',
+        title: 'oxc-project/oxc',
+        description: 'The Oxidized JavaScript Compiler suite with best-in-class performance.',
+        language: 'Rust',
+        languageColor: 'orange',
+        ecosystem: 'Rust',
+        ageDays: 120,
+        lastCommitDays: 3,
+        stars24: 45,
+        trend: 84,
+        starredDaysAgo: 1,
+        curators: ['torvalds', 'matklad', 'dtolnay'],
+        primaryCurator: 'torvalds',
+        spark: [4, 6, 7, 9, 10, 12, 14],
+        authority: 90
+      },
+      {
+        id: 'openpipe/ai-router',
+        title: 'openpipe/ai-router',
+        description: 'A fast multi-provider routing layer for AI calls with usage analytics.',
+        language: 'Go',
+        languageColor: 'emerald',
+        ecosystem: 'AI/ML',
+        ageDays: 9,
+        lastCommitDays: 1,
+        stars24: 61,
+        trend: 79,
+        starredDaysAgo: 0,
+        curators: ['shadcn', 'danielgross', 'karpathy'],
+        primaryCurator: 'shadcn',
+        spark: [3, 5, 8, 7, 10, 12, 16],
+        authority: 88
+      },
+      {
+        id: 'vercel/turbo',
+        title: 'vercel/turbo',
+        description: 'Incremental builds and task orchestration for monorepos.',
+        language: 'TypeScript',
+        languageColor: 'yellow',
+        ecosystem: 'Frontend',
+        ageDays: 620,
+        lastCommitDays: 5,
+        stars24: 32,
+        trend: 72,
+        starredDaysAgo: 3,
+        curators: ['rauchg', 'shadcn'],
+        primaryCurator: 'rauchg',
+        spark: [2, 4, 3, 5, 4, 6, 7],
+        authority: 86
+      },
+      {
+        id: 'tinygrad/tinygrad',
+        title: 'tinygrad/tinygrad',
+        description: 'A small, fast, and hackable deep learning framework.',
+        language: 'Python',
+        languageColor: 'sky',
+        ecosystem: 'AI/ML',
+        ageDays: 80,
+        lastCommitDays: 4,
+        stars24: 55,
+        trend: 77,
+        starredDaysAgo: 4,
+        curators: ['geohot', 'swyx'],
+        primaryCurator: 'geohot',
+        spark: [5, 6, 8, 7, 9, 12, 11],
+        authority: 85
+      }
+    ];
+
+    const curatorProfiles = {
+      bentossell: 'https://github.com/bentossell.png',
+      steipete: 'https://github.com/steipete.png',
+      shadcn: 'https://github.com/shadcn.png',
+      torvalds: 'https://github.com/torvalds.png',
+      danielgross: 'https://github.com/danielgross.png',
+      swyx: 'https://github.com/swyx.png',
+      theo: 'https://github.com/theo.png',
+      bruce: 'https://github.com/bruce.png',
+      t3dotgg: 'https://github.com/t3dotgg.png',
+      matklad: 'https://github.com/matklad.png',
+      dtolnay: 'https://github.com/dtolnay.png',
+      rauchg: 'https://github.com/rauchg.png',
+      geohot: 'https://github.com/geohot.png',
+      karpathy: 'https://github.com/karpathy.png'
+    };
+
+    const state = {
+      timeframe: 'week',
+      ecosystem: 'All',
+      newOnly: false,
+      curators: new Set(),
+      saved: new Set(JSON.parse(localStorage.getItem('devpulse:saved') || '[]'))
+    };
+
+    const feed = document.getElementById('feed');
+    const emptyState = document.getElementById('empty-state');
+    const curatorList = document.getElementById('curator-list');
+    const curatorFilters = document.getElementById('curator-filters');
+    const activeEcosystem = document.getElementById('active-ecosystem');
+
+    function formatRelative(days) {
+      if (days === 0) return 'today';
+      if (days === 1) return 'yesterday';
+      return `${days}d ago`;
+    }
+
+    function formatCommit(days) {
+      if (days === 0) return 'Commit: today';
+      if (days === 1) return 'Commit: yesterday';
+      return `Commit: ${days}d ago`;
+    }
+
+    function withinTimeframe(repo) {
+      if (state.timeframe === 'today') return repo.starredDaysAgo <= 0;
+      if (state.timeframe === 'week') return repo.starredDaysAgo <= 7;
+      return repo.starredDaysAgo <= 30;
+    }
+
+    function matchesFilters(repo) {
+      if (!withinTimeframe(repo)) return false;
+      if (state.ecosystem !== 'All' && repo.ecosystem !== state.ecosystem) return false;
+      if (state.newOnly && repo.ageDays > 30) return false;
+      if (state.curators.size > 0) {
+        const hasCurator = repo.curators.some(curator => state.curators.has(curator));
+        if (!hasCurator) return false;
+      }
+      return true;
+    }
+
+    function buildSparkPath(points) {
+      const max = Math.max(...points);
+      const min = Math.min(...points);
+      const range = max - min || 1;
+      return points.map((value, index) => {
+        const x = (index / (points.length - 1)) * 100;
+        const y = 20 - ((value - min) / range) * 18;
+        return `${index === 0 ? 'M' : 'L'}${x} ${y}`;
+      }).join(' ');
+    }
+
+    function render() {
+      const filtered = repoData
+        .filter(matchesFilters)
+        .sort((a, b) => b.trend - a.trend);
+
+      feed.innerHTML = '';
+      emptyState.classList.toggle('hidden', filtered.length !== 0);
+
+      filtered.forEach((repo, index) => {
+        const template = document.getElementById('card-template');
+        const card = template.content.cloneNode(true);
+        const root = card.querySelector('article');
+        root.style.animationDelay = `${index * 0.06}s`;
+
+        card.querySelector('[data-rank]').textContent = `#${index + 1}`;
+        card.querySelector('[data-title]').textContent = repo.title;
+        card.querySelector('[data-description]').textContent = repo.description;
+        card.querySelector('[data-ecosystem]').textContent = repo.ecosystem;
+        card.querySelector('[data-last-commit]').textContent = formatCommit(repo.lastCommitDays);
+
+        const freshnessPill = card.querySelector('[data-freshness-pill]');
+        if (repo.ageDays <= 30) {
+          freshnessPill.textContent = `New (${repo.ageDays}d)`;
+          freshnessPill.className = 'px-2 py-0.5 rounded-full text-xs font-medium bg-freshness/10 border border-freshness/20 text-freshness';
+        } else {
+          freshnessPill.textContent = `Established (${repo.ageDays}d)`;
+          freshnessPill.className = 'px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 border border-gray-500/20 text-gray-400';
+        }
+
+        const languagePill = card.querySelector('[data-language-pill]');
+        const languageDot = card.querySelector('[data-language-dot]');
+        languagePill.classList.add(`bg-${repo.languageColor}-500/10`, `border-${repo.languageColor}-500/20`, `text-${repo.languageColor}-400`);
+        languageDot.classList.add(`bg-${repo.languageColor}-500`);
+        card.querySelector('[data-language]').textContent = repo.language;
+
+        const avatarStack = card.querySelector('[data-avatar-stack]');
+        avatarStack.innerHTML = '';
+        repo.curators.slice(0, 3).forEach(handle => {
+          const img = document.createElement('img');
+          img.src = curatorProfiles[handle];
+          img.alt = handle;
+          img.className = 'w-7 h-7 rounded-full border-2 border-card';
+          avatarStack.appendChild(img);
+        });
+        const extra = repo.curators.length - 3;
+        if (extra > 0) {
+          const extraBadge = document.createElement('div');
+          extraBadge.className = 'w-7 h-7 rounded-full border-2 border-card bg-gray-800 flex items-center justify-center text-[10px] font-medium text-gray-400';
+          extraBadge.textContent = `+${extra}`;
+          avatarStack.appendChild(extraBadge);
+        }
+
+        card.querySelector('[data-curator-count]').textContent = `${repo.curators.length} curators`;
+        card.querySelector('[data-starred-by]').innerHTML = `Starred by <span class="text-accent font-medium">@${repo.primaryCurator}</span> ${formatRelative(repo.starredDaysAgo)}`;
+        card.querySelector('[data-velocity]').textContent = `+${repo.stars24} stars / 24h`;
+        card.querySelector('[data-trend]').textContent = repo.trend;
+        card.querySelector('[data-stars24]').innerHTML = `
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          ${repo.stars24} / 24h
+        `;
+
+        card.querySelector('[data-tooltip]').innerHTML = `
+          <div class="font-mono text-gray-400 mb-1">Trend Score: ${repo.trend}</div>
+          <div>Authority: ${repo.authority} (${repo.primaryCurator})</div>
+          <div>Velocity: ${repo.stars24} stars / 24h</div>
+          <div>Freshness: ${repo.ageDays} days old</div>
+        `;
+
+        const spark = card.querySelector('[data-spark]');
+        spark.innerHTML = `<path d="${buildSparkPath(repo.spark)}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+
+        const saveButton = card.querySelector('[data-save]');
+        const saved = state.saved.has(repo.id);
+        saveButton.textContent = saved ? 'Saved' : 'Save';
+        saveButton.classList.toggle('text-authority', saved);
+        saveButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (state.saved.has(repo.id)) {
+            state.saved.delete(repo.id);
+          } else {
+            state.saved.add(repo.id);
+          }
+          localStorage.setItem('devpulse:saved', JSON.stringify([...state.saved]));
+          render();
+        });
+
+        feed.appendChild(card);
+      });
+
+      updateCurators(filtered);
+    }
+
+    function updateCurators(filteredRepos) {
+      const curatorCounts = {};
+      repoData.forEach(repo => {
+        repo.curators.forEach(curator => {
+          curatorCounts[curator] = curatorCounts[curator] || { count: 0, total: 0 };
+          curatorCounts[curator].total += 1;
+        });
+      });
+
+      filteredRepos.forEach(repo => {
+        repo.curators.forEach(curator => {
+          curatorCounts[curator].count += 1;
+        });
+      });
+
+      const curators = Object.keys(curatorCounts)
+        .map(handle => ({ handle, ...curatorCounts[handle] }))
+        .sort((a, b) => b.count - a.count || b.total - a.total)
+        .slice(0, 5);
+
+      curatorList.innerHTML = '';
+      curators.forEach(curator => {
+        const button = document.createElement('button');
+        button.className = 'w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border hover:border-gray-600 transition-all hover:shadow-glow';
+        const selected = state.curators.has(curator.handle);
+        if (selected) button.classList.add('border-authority');
+        button.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img class="w-8 h-8 rounded-full" src="${curatorProfiles[curator.handle]}" alt="${curator.handle}" />
+            <div class="text-left">
+              <div class="text-sm text-white">@${curator.handle}</div>
+              <div class="text-[11px] text-gray-500 font-mono">Found ${curator.count} trending</div>
+            </div>
+          </div>
+          <span class="text-xs text-authority font-mono">${90 + curator.count}</span>
+        `;
+        button.addEventListener('click', () => toggleCurator(curator.handle));
+        curatorList.appendChild(button);
+      });
+
+      curatorFilters.innerHTML = '';
+      Object.keys(curatorCounts).slice(0, 8).forEach(handle => {
+        const chip = document.createElement('button');
+        chip.className = 'px-2.5 py-1 rounded-full border border-border text-xs text-gray-400 hover:text-white';
+        if (state.curators.has(handle)) chip.classList.add('chip-active');
+        chip.textContent = `@${handle}`;
+        chip.addEventListener('click', () => toggleCurator(handle));
+        curatorFilters.appendChild(chip);
+      });
+    }
+
+    function toggleCurator(handle) {
+      if (state.curators.has(handle)) {
+        state.curators.delete(handle);
+      } else {
+        state.curators.add(handle);
+      }
+      render();
+    }
+
+    document.querySelectorAll('[data-timeframe]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-timeframe]').forEach(btn => btn.classList.remove('chip-active'));
+        button.classList.add('chip-active');
+        state.timeframe = button.dataset.timeframe;
+        render();
+      });
+    });
+
+    document.querySelectorAll('[data-ecosystem]').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-ecosystem]').forEach(btn => btn.classList.remove('chip-active'));
+        button.classList.add('chip-active');
+        state.ecosystem = button.dataset.ecosystem;
+        activeEcosystem.textContent = state.ecosystem;
+        render();
+      });
+    });
+
+    document.getElementById('new-only').addEventListener('click', (event) => {
+      state.newOnly = !state.newOnly;
+      event.currentTarget.classList.toggle('chip-active', state.newOnly);
+      render();
+    });
+
+    render();
+  </script>
 </body>
 </html>
